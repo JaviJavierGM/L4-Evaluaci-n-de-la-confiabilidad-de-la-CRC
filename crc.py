@@ -1,5 +1,5 @@
 from bitarray import bitarray
-import numpy as np
+from numpy.random import MT19937, RandomState
 
 success_count = 0
 
@@ -33,22 +33,26 @@ def cyclic_redundancy_check(filename: str, divisor: str, len_crc: int) -> int:
     return text
 
 def error_generator(encode_text: int, n: int, r: int, seed: int) -> int:
-    rng = np.random.default_rng(seed)
-    begin_point = rng.integers(low = 0, high = len(encode_text)-n-1) #Inicio de la rafaga aleatoria
+    rs = RandomState(seed)
+    mt19937 = MT19937()
+    mt19937.state = rs.get_state()
+    rs2 = RandomState(mt19937)
+
+    begin_point = rs2.random_integers(low = 0, high = len(encode_text)-n-2) #Inicio de la rafaga aleatoria
     fin = begin_point + n -1
     encode_text[begin_point] = not encode_text[begin_point]
 
     if n <= r:
         for i in range(1, n):
             begin_point += 1
-            flip_coin = rng.integers(low = 0, high = 2)
+            flip_coin = rs2.random_integers(low = 0, high = 1)
             if flip_coin == 1:
                 encode_text[begin_point] = not encode_text[begin_point]
     else:
         encode_text[fin] = not encode_text[fin]
         for i in range(1, n-1):
             begin_point += 1
-            flip_coin = rng.integers(low = 0, high = 2)
+            flip_coin = rs2.random_integers(low = 0, high = 1)
             if flip_coin == 1:
                 encode_text[begin_point] = not encode_text[begin_point]
 
@@ -84,7 +88,7 @@ http://www.sunshine2k.de/coding/javascript/crc/crc_js.html
 """
 div = '10011'
 r = 4
-n = 6
+n = 5
 print("Processing ...")
 for i in range(1000000, 1001000):
     c = cyclic_redundancy_check('test.txt', div, r)
